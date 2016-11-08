@@ -1,5 +1,5 @@
 ///
-/// Editorial by HTML5 UP
+/// Multiverse by HTML5 UP
 /// html5up.net | @ajlkn
 /// Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 ///
@@ -54,51 +54,11 @@
 				}
 
 				.icon {
-					color: inherit;
+					color: _palette(fg-light);
 
 					&:before {
-						font-size: 1.25em;
+						font-size: 1.5em;
 					}
-				}
-			}
-		}
-
-		&.contact {
-			list-style: none;
-			padding: 0;
-
-			li {
-				@include icon;
-				border-top: solid 1px _palette(border);
-				margin: 1.5em 0 0 0;
-				padding: 1.5em 0 0 3em;
-				position: relative;
-
-				&:before {
-					color: _palette(accent);
-					display: inline-block;
-					font-size: 1.5em;
-					height: 1.125em;
-					left: 0;
-					line-height: 1.125em;
-					position: absolute;
-					text-align: center;
-					top: (1.5em / 1.5);
-					width: 1.5em;
-				}
-
-				&:first-child {
-					border-top: 0;
-					margin-top: 0;
-					padding-top: 0;
-
-					&:before {
-						top: 0;
-					}
-				}
-
-				a {
-					color: inherit;
 				}
 			}
 		}
@@ -171,6 +131,42 @@
 
 					li {
 						padding: 0 0 0 (_size(element-margin) * 0.25);
+					}
+				}
+			}
+
+			@include breakpoint(xsmall) {
+				margin: 0 0 _size(element-margin) 0;
+
+				li {
+					padding: (_size(element-margin) * 0.5) 0 0 0;
+					display: block;
+					text-align: center;
+					width: 100%;
+
+					&:first-child {
+						padding-top: 0;
+					}
+
+					> * {
+						width: 100%;
+						margin: 0 !important;
+
+						&.icon {
+							&:before {
+								margin-left: -2em;
+							}
+						}
+					}
+				}
+
+				&.small {
+					li {
+						padding: (_size(element-margin) * 0.25) 0 0 0;
+
+						&:first-child {
+							padding-top: 0;
+						}
 					}
 				}
 			}

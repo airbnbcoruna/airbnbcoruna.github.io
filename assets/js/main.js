@@ -1,5 +1,5 @@
 /*
-	Editorial by HTML5 UP
+	Multiverse by HTML5 UP
 	html5up.net | @ajlkn
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
@@ -11,274 +11,288 @@
 		large: '(max-width: 1280px)',
 		medium: '(max-width: 980px)',
 		small: '(max-width: 736px)',
-		xsmall: '(max-width: 480px)',
-		'xlarge-to-max': '(min-width: 1681px)',
-		'small-to-xlarge': '(min-width: 481px) and (max-width: 1680px)'
+		xsmall: '(max-width: 480px)'
 	});
 
 	$(function() {
 
 		var	$window = $(window),
-			$head = $('head'),
-			$body = $('body');
+			$body = $('body'),
+			$wrapper = $('#wrapper');
 
-		// Disable animations/transitions ...
+		// Hack: Enable IE workarounds.
+			if (skel.vars.IEVersion < 12)
+				$body.addClass('ie');
 
-			// ... until the page has loaded.
-				$body.addClass('is-loading');
+		// Touch?
+			if (skel.vars.mobile)
+				$body.addClass('touch');
 
-				$window.on('load', function() {
-					setTimeout(function() {
-						$body.removeClass('is-loading');
-					}, 100);
-				});
+		// Transitions supported?
+			if (skel.canUse('transition')) {
 
-			// ... when resizing.
-				var resizeTimeout;
+				// Add (and later, on load, remove) "loading" class.
+					$body.addClass('loading');
 
-				$window.on('resize', function() {
+					$window.on('load', function() {
+						window.setTimeout(function() {
+							$body.removeClass('loading');
+						}, 100);
+					});
 
-					// Mark as resizing.
-						$body.addClass('is-resizing');
+				// Prevent transitions/animations on resize.
+					var resizeTimeout;
 
-					// Unmark after delay.
-						clearTimeout(resizeTimeout);
+					$window.on('resize', function() {
 
-						resizeTimeout = setTimeout(function() {
-							$body.removeClass('is-resizing');
+						window.clearTimeout(resizeTimeout);
+
+						$body.addClass('resizing');
+
+						resizeTimeout = window.setTimeout(function() {
+							$body.removeClass('resizing');
 						}, 100);
 
-				});
+					});
+
+			}
+
+		// Scroll back to top.
+			$window.scrollTop(0);
 
 		// Fix: Placeholder polyfill.
 			$('form').placeholder();
 
-		// Prioritize "important" elements on medium.
-			skel.on('+medium -medium', function() {
-				$.prioritize(
-					'.important\\28 medium\\29',
-					skel.breakpoint('medium').active
-				);
-			});
+		// Panels.
+			var $panels = $('.panel');
 
-		// Fixes.
+			$panels.each(function() {
 
-			// Object fit images.
-				if (!skel.canUse('object-fit')
-				||	skel.vars.browser == 'safari')
-					$('.image.object').each(function() {
+				var $this = $(this),
+					$toggles = $('[href="#' + $this.attr('id') + '"]'),
+					$closer = $('<div class="closer" />').appendTo($this);
 
-						var $this = $(this),
-							$img = $this.children('img');
-
-						// Hide original image.
-							$img.css('opacity', '0');
-
-						// Set background.
-							$this
-								.css('background-image', 'url("' + $img.attr('src') + '")')
-								.css('background-size', $img.css('object-fit') ? $img.css('object-fit') : 'cover')
-								.css('background-position', $img.css('object-position') ? $img.css('object-position') : 'center');
-
-					});
-
-		// Sidebar.
-			var $sidebar = $('#sidebar'),
-				$sidebar_inner = $sidebar.children('.inner');
-
-			// Inactive by default on <= large.
-				skel
-					.on('+large', function() {
-						$sidebar.addClass('inactive');
-					})
-					.on('-large !large', function() {
-						$sidebar.removeClass('inactive');
-					});
-
-			// Hack: Workaround for Chrome/Android scrollbar position bug.
-				if (skel.vars.os == 'android'
-				&&	skel.vars.browser == 'chrome')
-					$('<style>#sidebar .inner::-webkit-scrollbar { display: none; }</style>')
-						.appendTo($head);
-
-			// Toggle.
-				if (skel.vars.IEVersion > 9) {
-
-					$('<a href="#sidebar" class="toggle">Toggle</a>')
-						.appendTo($sidebar)
+				// Closer.
+					$closer
 						.on('click', function(event) {
+							$this.trigger('---hide');
+						});
 
-							// Prevent default.
-								event.preventDefault();
-								event.stopPropagation();
+				// Events.
+					$this
+						.on('click', function(event) {
+							event.stopPropagation();
+						})
+						.on('---toggle', function() {
 
-							// Toggle.
-								$sidebar.toggleClass('inactive');
+							if ($this.hasClass('active'))
+								$this.triggerHandler('---hide');
+							else
+								$this.triggerHandler('---show');
+
+						})
+						.on('---show', function() {
+
+							// Hide other content.
+								if ($body.hasClass('content-active'))
+									$panels.trigger('---hide');
+
+							// Activate content, toggles.
+								$this.addClass('active');
+								$toggles.addClass('active');
+
+							// Activate body.
+								$body.addClass('content-active');
+
+						})
+						.on('---hide', function() {
+
+							// Deactivate content, toggles.
+								$this.removeClass('active');
+								$toggles.removeClass('active');
+
+							// Deactivate body.
+								$body.removeClass('content-active');
 
 						});
 
-				}
+				// Toggles.
+					$toggles
+						.removeAttr('href')
+						.css('cursor', 'pointer')
+						.on('click', function(event) {
 
-			// Events.
-
-				// Link clicks.
-					$sidebar.on('click', 'a', function(event) {
-
-						// >large? Bail.
-							if (!skel.breakpoint('large').active)
-								return;
-
-						// Vars.
-							var $a = $(this),
-								href = $a.attr('href'),
-								target = $a.attr('target');
-
-						// Prevent default.
 							event.preventDefault();
 							event.stopPropagation();
 
-						// Check URL.
-							if (!href || href == '#' || href == '')
-								return;
+							$this.trigger('---toggle');
 
-						// Hide sidebar.
-							$sidebar.addClass('inactive');
+						});
 
-						// Redirect to href.
-							setTimeout(function() {
+			});
 
-								if (target == '_blank')
-									window.open(href);
-								else
-									window.location.href = href;
+			// Global events.
+				$body
+					.on('click', function(event) {
 
-							}, 500);
+						if ($body.hasClass('content-active')) {
 
-					});
-
-				// Prevent certain events inside the panel from bubbling.
-					$sidebar.on('click touchend touchstart touchmove', function(event) {
-
-						// >large? Bail.
-							if (!skel.breakpoint('large').active)
-								return;
-
-						// Prevent propagation.
+							event.preventDefault();
 							event.stopPropagation();
 
-					});
+							$panels.trigger('---hide');
 
-				// Hide panel on body click/tap.
-					$body.on('click touchend', function(event) {
-
-						// >large? Bail.
-							if (!skel.breakpoint('large').active)
-								return;
-
-						// Deactivate.
-							$sidebar.addClass('inactive');
+						}
 
 					});
 
-			// Scroll lock.
-			// Note: If you do anything to change the height of the sidebar's content, be sure to
-			// trigger 'resize.sidebar-lock' on $window so stuff doesn't get out of sync.
+				$window
+					.on('keyup', function(event) {
 
-				$window.on('load.sidebar-lock', function() {
+						if (event.keyCode == 27
+						&&	$body.hasClass('content-active')) {
 
-					var sh, wh, st;
-
-					// Reset scroll position to 0 if it's 1.
-						if ($window.scrollTop() == 1)
-							$window.scrollTop(0);
-
-					$window
-						.on('scroll.sidebar-lock', function() {
-
-							var x, y;
-
-							// IE<10? Bail.
-								if (skel.vars.IEVersion < 10)
-									return;
-
-							// <=large? Bail.
-								if (skel.breakpoint('large').active) {
-
-									$sidebar_inner
-										.data('locked', 0)
-										.css('position', '')
-										.css('top', '');
-
-									return;
-
-								}
-
-							// Calculate positions.
-								x = Math.max(sh - wh, 0);
-								y = Math.max(0, $window.scrollTop() - x);
-
-							// Lock/unlock.
-								if ($sidebar_inner.data('locked') == 1) {
-
-									if (y <= 0)
-										$sidebar_inner
-											.data('locked', 0)
-											.css('position', '')
-											.css('top', '');
-									else
-										$sidebar_inner
-											.css('top', -1 * x);
-
-								}
-								else {
-
-									if (y > 0)
-										$sidebar_inner
-											.data('locked', 1)
-											.css('position', 'fixed')
-											.css('top', -1 * x);
-
-								}
-
-						})
-						.on('resize.sidebar-lock', function() {
-
-							// Calculate heights.
-								wh = $window.height();
-								sh = $sidebar_inner.outerHeight() + 30;
-
-							// Trigger scroll.
-								$window.trigger('scroll.sidebar-lock');
-
-						})
-						.trigger('resize.sidebar-lock');
-
-					});
-
-		// Menu.
-			var $menu = $('#menu'),
-				$menu_openers = $menu.children('ul').find('.opener');
-
-			// Openers.
-				$menu_openers.each(function() {
-
-					var $this = $(this);
-
-					$this.on('click', function(event) {
-
-						// Prevent default.
 							event.preventDefault();
+							event.stopPropagation();
 
-						// Toggle.
-							$menu_openers.not($this).removeClass('active');
-							$this.toggleClass('active');
+							$panels.trigger('---hide');
 
-						// Trigger resize (sidebar lock).
-							$window.triggerHandler('resize.sidebar-lock');
+						}
 
 					});
+
+		// Header.
+			var $header = $('#header');
+
+			// Links.
+				$header.find('a').each(function() {
+
+					var $this = $(this),
+						href = $this.attr('href');
+
+					// Internal link? Skip.
+						if (!href
+						||	href.charAt(0) == '#')
+							return;
+
+					// Redirect on click.
+						$this
+							.removeAttr('href')
+							.css('cursor', 'pointer')
+							.on('click', function(event) {
+
+								event.preventDefault();
+								event.stopPropagation();
+
+								window.location.href = href;
+
+							});
 
 				});
+
+		// Footer.
+			var $footer = $('#footer');
+
+			// Copyright.
+			// This basically just moves the copyright line to the end of the *last* sibling of its current parent
+			// when the "medium" breakpoint activates, and moves it back when it deactivates.
+				$footer.find('.copyright').each(function() {
+
+					var $this = $(this),
+						$parent = $this.parent(),
+						$lastParent = $parent.parent().children().last();
+
+					skel
+						.on('+medium', function() {
+							$this.appendTo($lastParent);
+						})
+						.on('-medium', function() {
+							$this.appendTo($parent);
+						});
+
+				});
+
+		// Main.
+			var $main = $('#main');
+
+			// Thumbs.
+				$main.children('.thumb').each(function() {
+
+					var	$this = $(this),
+						$image = $this.find('.image'), $image_img = $image.children('img'),
+						x;
+
+					// No image? Bail.
+						if ($image.length == 0)
+							return;
+
+					// Image.
+					// This sets the background of the "image" <span> to the image pointed to by its child
+					// <img> (which is then hidden). Gives us way more flexibility.
+
+						// Set background.
+							$image.css('background-image', 'url(' + $image_img.attr('src') + ')');
+
+						// Set background position.
+							if (x = $image_img.data('position'))
+								$image.css('background-position', x);
+
+						// Hide original img.
+							$image_img.hide();
+
+					// Hack: IE<11 doesn't support pointer-events, which means clicks to our image never
+					// land as they're blocked by the thumbnail's caption overlay gradient. This just forces
+					// the click through to the image.
+						if (skel.vars.IEVersion < 11)
+							$this
+								.css('cursor', 'pointer')
+								.on('click', function() {
+									$image.trigger('click');
+								});
+
+				});
+
+			// Poptrox.
+				$main.poptrox({
+					baseZIndex: 20000,
+					caption: function($a) {
+
+						var s = '';
+
+						$a.nextAll().each(function() {
+							s += this.outerHTML;
+						});
+
+						return s;
+
+					},
+					fadeSpeed: 300,
+					onPopupClose: function() { $body.removeClass('modal-active'); },
+					onPopupOpen: function() { $body.addClass('modal-active'); },
+					overlayOpacity: 0,
+					popupCloserText: '',
+					popupHeight: 150,
+					popupLoaderText: '',
+					popupSpeed: 300,
+					popupWidth: 150,
+					selector: '.thumb > a.image',
+					usePopupCaption: true,
+					usePopupCloser: true,
+					usePopupDefaultStyling: false,
+					usePopupForceClose: true,
+					usePopupLoader: true,
+					usePopupNav: true,
+					windowMargin: 50
+				});
+
+				// Hack: Set margins to 0 when 'xsmall' activates.
+					skel
+						.on('-xsmall', function() {
+							$main[0]._poptrox.windowMargin = 50;
+						})
+						.on('+xsmall', function() {
+							$main[0]._poptrox.windowMargin = 0;
+						});
 
 	});
 
